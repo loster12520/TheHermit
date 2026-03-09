@@ -1,35 +1,39 @@
+import com.lignting.theHermit.RealNodeContext
+import com.lignting.theHermit.realNode
 import kotlinx.browser.document
+import kotlinx.browser.window
 
-/**
- * 举例
- *
- * ```kotlin
- * // 定义一个组件
- * val Counter = component {
- *     val count by signal(0)
- *     val double by computed { count * 2 }
- *
- *     onMount {
- *         println("Counter mounted")
- *     }
- *
- *     effect {
- *         println("count = $count, double = $double")
- *     }
- *
- *     div {
- *         +"Count: $count"
- *         button("+") { count++ }
- *         +"Double: $double"
- *     }
- * }
- *
- * val root = document.getElementById("root") ?: throw IllegalStateException("Root element not found")
- * root.appendChild(Counter())
- * ```
- */
+// 定义div的信息
+class DivContext : RealNodeContext("div") {
+    var className: String? by attribute("class")
+    var `data-text`: String? by attribute()
+}
+
+// 实现一个div的真实节点
+val div = DivContext().realNode()
+
+
+// 创建一个真实节点
+val divNode = div {
+    className = "flex"
+    `data-text` = "Hello, World!"
+    
+    div {
+        className = "flex"
+        `data-text` = "Hello, World!"
+    }
+    
+    div {
+        className = "flex"
+        `data-text` = "Hello, World!"
+        
+        +"Hello, World!"
+    }
+}
 
 fun main() {
-    val root = document.getElementById("root") ?: throw IllegalStateException("Root element not found")
-    root.appendChild(document.createElement("div"))
+    window.onload = {
+        val body = document.body ?: throw IllegalStateException("Root element not found")
+        body.appendChild(divNode)
+    }
 }
