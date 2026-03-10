@@ -21,11 +21,6 @@ val divNode = div {
     div {
         className = "flex"
         `data-text` = "Hello, World!"
-    }
-    
-    div {
-        className = "flex"
-        `data-text` = "Hello, World!"
         
         +"Hello, World!"
     }
