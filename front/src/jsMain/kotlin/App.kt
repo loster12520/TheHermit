@@ -1,5 +1,6 @@
 import com.lignting.theHermit.RealNodeContext
 import com.lignting.theHermit.realNode
+import com.lignting.theHermit.signal
 import kotlinx.browser.document
 import kotlinx.browser.window
 
@@ -12,6 +13,7 @@ class DivContext : RealNodeContext("div") {
 // 实现一个div的真实节点
 val div = DivContext().realNode()
 
+val text by "Hello, World!".signal()
 
 // 创建一个真实节点
 val divNode = div {
