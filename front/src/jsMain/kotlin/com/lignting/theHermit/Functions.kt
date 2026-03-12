@@ -46,14 +46,21 @@ fun <T : RealNodeContext> realNode(
  */
 fun <T : RealNodeContext> T.realNode(): (T.() -> Unit) -> Node = realNode(this)
 
+/**
+ * 信号，表示一个可变的数据，可以被观察和更新。当信号更新时，所有依赖于该信号的更新域都会被重新加载
+ * @param T 信号的数据类型
+ * @property data 信号的数据
+ */
 class Signal<T>(value: T) {
     var data: T = value
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+        // TODO: 添加依赖关系
         return data
     }
     
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
         data = value
+        // TODO: 触发更新域的重新加载
     }
 }
 

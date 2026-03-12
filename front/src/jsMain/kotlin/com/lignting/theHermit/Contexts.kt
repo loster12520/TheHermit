@@ -4,7 +4,10 @@ import kotlinx.browser.document
 import org.w3c.dom.Node
 import kotlin.reflect.KProperty
 
-abstract class AbstractPropertyContext<T>(val tag: String?, val attributePool: MutableList<Pair<String, T?>>) {
+abstract class AbstractPropertyContext<T>(
+    val tag: String?,
+    val attributePool: MutableList<Pair<String, T?>>
+) : UniqueEntity() {
     private fun getTag(property: KProperty<*>) = tag ?: property.name
     
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T? =
@@ -20,7 +23,7 @@ abstract class AbstractPropertyContext<T>(val tag: String?, val attributePool: M
             }
     }
     
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: PropertyFunction<T>) {
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: UpdateDomain<T>) {
         setValue(thisRef, property, value())
     }
 }
@@ -36,8 +39,7 @@ class AttributeContext(tag: String?, attributePool: MutableList<Pair<String, Str
 class PropertyContext<T>(tag: String?, attributePool: MutableList<Pair<String, T?>>) :
     AbstractPropertyContext<T>(tag, attributePool)
 
-open class NodeContext() {
-    var id = hashCode()
+open class NodeContext() : UniqueEntity() {
     val childrenNodes: MutableList<Node> = mutableListOf()
     
     operator fun String.unaryPlus() = childrenNodes.add(document.createTextNode(this))
