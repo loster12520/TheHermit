@@ -23,8 +23,10 @@ abstract class AbstractPropertyContext<T>(
             }
     }
     
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: UpdateDomain<T>) {
-        setValue(thisRef, property, value())
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: UpdateDomain<T, T?>) {
+        
+        setValue(thisRef, property, value(getValue(thisRef, property)))
+        TODO()
     }
 }
 
