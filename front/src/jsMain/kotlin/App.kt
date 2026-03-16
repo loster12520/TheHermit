@@ -1,28 +1,28 @@
 import com.lignting.theHermit.RealNodeContext
-import com.lignting.theHermit.realNode
 import com.lignting.theHermit.signal
+import com.lignting.theHermit.invoke
 import kotlinx.browser.document
 import kotlinx.browser.window
 
 // 定义div的信息
 class DivContext : RealNodeContext("div") {
-    var className: String? by attribute("class")
-    var `data-text`: String? by attribute()
+    var className by attribute("class")
+    var `data-text` by attribute()
 }
 
 // 实现一个div的真实节点
-val div = DivContext().realNode()
+val div = DivContext()
 
 val text by "Hello, World!".signal()
 
 // 创建一个真实节点
 val divNode = div {
-    className = "flex"
-    `data-text` = "Hello, World!"
+    className = { "flex" }
+    `data-text` = { "Hello, World!" }
     
     div {
-        className = "flex"
-        `data-text` = "Hello, World!"
+        className = { "flex" }
+        `data-text` = { text }
         
         +"Hello, World!"
     }

@@ -5,4 +5,4 @@ package com.lignting.theHermit
  */
 val nodeContextStack = ArrayDeque<NodeContext>()
 
-val effectContextStack = ArrayDeque<() -> Unit>()
+val effectContextStack = ArrayDeque<MutableList<String>>()

@@ -1,5 +1,7 @@
 package com.lignting.theHermit
 
+import kotlin.reflect.KProperty
+
 abstract class UniqueEntity {
     companion object {
         private var idCounter = 0
@@ -15,4 +17,26 @@ abstract class UniqueEntity {
  * @param Context 更新域的上下文类型，表示更新域所在的上下文环境，可以是一个节点上下文或者一个属性上下文等
  * @return 更新域
  */
-typealias UpdateDomain<Type,Context> = Context.() -> Type?
+typealias UpdateDomain<Type, Context> = Context.() -> Type?
+
+
+operator fun <Type, Context> Context.invoke(tag: String, function: UpdateDomain<Type, Context>): Type? {
+    effectContextStack.addLast(mutableListOf())
+    val result = function()
+    val list = effectContextStack.removeLast()
+    return result
+}
+
+abstract class Update<T>() {
+    abstract var value: T?
+    
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): T? {
+        // TODO: 添加依赖关系
+        return this.value
+    }
+    
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+        this.value = value
+        // TODO: 触发更新域的重新加载
+    }
+}

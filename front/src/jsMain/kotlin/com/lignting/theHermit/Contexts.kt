@@ -8,25 +8,29 @@ abstract class AbstractPropertyContext<T>(
     val tag: String?,
     val attributePool: MutableList<Pair<String, T?>>
 ) : UniqueEntity() {
+    private var function: UpdateDomain<T, T?>? = null
     private fun getTag(property: KProperty<*>) = tag ?: property.name
     
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): T? =
-        attributePool.firstOrNull { it.first == getTag(property) }?.second
+    private fun get(tag: String): T? =
+        attributePool.firstOrNull { it.first == tag }?.second
     
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
-        val tag = getTag(property)
+    private fun set(tag: String, value: T?) =
         if (!(attributePool.any { it.first == tag }))
             attributePool.add(tag to value)
         else
             attributePool.forEachIndexed { index, (key, _) ->
                 if (key == tag) attributePool[index] = key to value
             }
-    }
     
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: UpdateDomain<T, T?>) {
-        
-        setValue(thisRef, property, value(getValue(thisRef, property)))
-        TODO()
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): UpdateDomain<T, T?>? = function
+    
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: UpdateDomain<T, T?>?) {
+        value?.let { value ->
+            getTag(property).also { tag ->
+                function = value
+                set(tag, get(tag)(tag, value))
+            }
+        }
     }
 }
 
