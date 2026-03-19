@@ -4,19 +4,18 @@ import kotlinx.browser.document
 import org.w3c.dom.Node
 
 operator fun <T : RealNodeContext> T.invoke(function: T.() -> Unit): Node {
-    nodeContextStack.addLast(this)
-    
-    // 执行函数，获取属性
-    this.function()
-    
-    nodeContextStack.removeLast()
-    
     val resultNode = document.createElement(this.tag)
     this.attributePool.forEach { (key, value) ->
         value?.also {
             resultNode.setAttribute(key, it)
         }
     }
+    
+    nodeContextStack.addLast(this)
+    // 执行函数，获取属性
+    this.function()
+    nodeContextStack.removeLast()
+    
     this.childrenNodes.forEach { child ->
         resultNode.appendChild(child)
     }
@@ -26,6 +25,8 @@ operator fun <T : RealNodeContext> T.invoke(function: T.() -> Unit): Node {
         val parentContext = nodeContextStack.last()
         parentContext.childrenNodes.add(resultNode)
     }
+    
+    this.node = resultNode
     
     // 返回当前节点
     return resultNode

@@ -11,24 +11,13 @@ abstract class AbstractPropertyContext<T>(
     private var function: UpdateDomain<T, T?>? = null
     private fun getTag(property: KProperty<*>) = tag ?: property.name
     
-    private fun get(tag: String): T? =
-        attributePool.firstOrNull { it.first == tag }?.second
-    
-    private fun set(tag: String, value: T?) =
-        if (!(attributePool.any { it.first == tag }))
-            attributePool.add(tag to value)
-        else
-            attributePool.forEachIndexed { index, (key, _) ->
-                if (key == tag) attributePool[index] = key to value
-            }
-    
     operator fun getValue(thisRef: Any?, property: KProperty<*>): UpdateDomain<T, T?>? = function
     
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: UpdateDomain<T, T?>?) {
         value?.let { value ->
+            function = value
             getTag(property).also { tag ->
-                function = value
-                set(tag, get(tag)(tag, value))
+                attributePool.set(tag, attributePool.get(tag)(tag, value))
             }
         }
     }
@@ -46,6 +35,7 @@ class PropertyContext<T>(tag: String?, attributePool: MutableList<Pair<String, T
     AbstractPropertyContext<T>(tag, attributePool)
 
 open class NodeContext() : UniqueEntity() {
+    var node: Node? = null
     val childrenNodes: MutableList<Node> = mutableListOf()
     
     operator fun String.unaryPlus() = childrenNodes.add(document.createTextNode(this))
@@ -58,6 +48,17 @@ open class NodeContext() : UniqueEntity() {
  */
 open class RealNodeContext(val tag: String) : NodeContext() {
     val attributePool: MutableList<Pair<String, String?>> = mutableListOf()
+    
+    private fun get(tag: String): String? =
+        attributePool.firstOrNull { it.first == tag }?.second
+    
+    private fun set(tag: String, value: String?) =
+        if (!(attributePool.any { it.first == tag }))
+            attributePool.add(tag to value)
+        else
+            attributePool.forEachIndexed { index, (key, _) ->
+                if (key == tag) attributePool[index] = key to value
+            }
     
     fun attribute(tag: String): AttributeContext = AttributeContext(tag, attributePool)
     fun attribute(): AttributeContext = AttributeContext(null, attributePool)

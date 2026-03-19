@@ -6,3 +6,5 @@ package com.lignting.theHermit
 val nodeContextStack = ArrayDeque<NodeContext>()
 
 val effectContextStack = ArrayDeque<MutableList<String>>()
+
+val effectPool = mutableMapOf<String, MutableList<() -> Unit>>()

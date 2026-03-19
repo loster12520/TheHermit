@@ -24,14 +24,19 @@ operator fun <Type, Context> Context.invoke(tag: String, function: UpdateDomain<
     effectContextStack.addLast(mutableListOf())
     val result = function()
     val list = effectContextStack.removeLast()
+    list.forEach { updateUuid ->
+        effectPool.getOrPut(updateUuid) { mutableListOf() }.add {
+            function()
+        }
+    }
     return result
 }
 
-abstract class Update<T>() {
+abstract class Update<T>() : UniqueEntity() {
     abstract var value: T?
     
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T? {
-        // TODO: 添加依赖关系
+        effectContextStack.last().add(uuid)
         return this.value
     }
     
