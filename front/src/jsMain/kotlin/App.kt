@@ -11,20 +11,22 @@ class DivContext : RealNodeContext("div") {
 }
 
 // 实现一个div的真实节点
-val div = DivContext()
+val div = { function: DivContext.() -> Unit ->
+    DivContext()(function)
+}
 
-val text by "Hello, World!".signal()
+var text by "Hello, World!".signal()
 
 // 创建一个真实节点
 val divNode = div {
     className = { "flex" }
-    `data-text` = { "Hello, World!" }
+    `data-text` = { text }
     
     div {
         className = { "flex" }
         `data-text` = { text }
         
-        +"Hello, World!"
+        +{ text }
     }
 }
 
@@ -33,4 +35,8 @@ fun main() {
         val body = document.body ?: throw IllegalStateException("Root element not found")
         body.appendChild(divNode)
     }
+    
+    window.setInterval({
+        text += "111"
+    }, 1000)
 }

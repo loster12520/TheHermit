@@ -1,12 +1,14 @@
 package com.lignting.theHermit
 
 import kotlinx.browser.document
+import org.w3c.dom.Element
 import org.w3c.dom.Node
 import kotlin.reflect.KProperty
 
 abstract class AbstractPropertyContext<T>(
     val tag: String?,
-    val attributePool: MutableList<Pair<String, T?>>
+    val get: (String) -> T?,
+    val set: (String, T?) -> Unit
 ) : UniqueEntity() {
     private var function: UpdateDomain<T, T?>? = null
     private fun getTag(property: KProperty<*>) = tag ?: property.name
@@ -17,7 +19,9 @@ abstract class AbstractPropertyContext<T>(
         value?.let { value ->
             function = value
             getTag(property).also { tag ->
-                attributePool.set(tag, attributePool.get(tag)(tag, value))
+                get(tag)() {
+                    set(tag, value())
+                }
             }
         }
     }
@@ -26,20 +30,53 @@ abstract class AbstractPropertyContext<T>(
 /**
  * 属性上下文，提供属性委托功能
  * @param tag 属性标签，如果为null，则使用属性名作为标签
- * @param attributePool 属性池，存储属性标签和属性值的键值对
+ * @param get 获取属性值的函数，接受一个标签参数，返回属性值
+ * @param set 设置属性值的函数，接受一个标签参数和一个属性值参数，将属性值设置到标签对应的属性上
  */
-class AttributeContext(tag: String?, attributePool: MutableList<Pair<String, String?>>) :
-    AbstractPropertyContext<String?>(tag, attributePool)
+class AttributeContext(
+    tag: String?,
+    get: (String) -> String?,
+    set: (String, String?) -> Unit
+) : AbstractPropertyContext<String?>(tag, get, set)
 
-class PropertyContext<T>(tag: String?, attributePool: MutableList<Pair<String, T?>>) :
-    AbstractPropertyContext<T>(tag, attributePool)
+class PropertyContext<T>(
+    tag: String?,
+    get: (String) -> T?,
+    set: (String, T?) -> Unit
+) : AbstractPropertyContext<T>(tag, get, set)
 
 open class NodeContext() : UniqueEntity() {
-    var node: Node? = null
+    var node: Element? = null
     val childrenNodes: MutableList<Node> = mutableListOf()
     
-    operator fun String.unaryPlus() = childrenNodes.add(document.createTextNode(this))
+    fun get(tag: String): String? =
+        node?.getAttribute(tag)
+    
+    fun set(tag: String, value: String?) =
+        value?.let {
+            node?.setAttribute(tag, value)
+        }
+    
+    
     operator fun plus(node: Node) = childrenNodes.add(node)
+    operator fun String.unaryPlus() = childrenNodes.add(document.createTextNode(this))
+    
+    class TextNodeContext(var text: String) : UniqueEntity() {
+        val node = document.createTextNode(text)
+    }
+    
+    operator fun UpdateDomainContextless<String>.unaryPlus() {
+        val node = TextNodeContext(this.invoke() ?: "")
+        val func = this
+        val function: UpdateDomain<String, TextNodeContext> = {
+            text = func() ?: ""
+            this.node.textContent = text
+            text
+        }
+        node(function)
+        
+        this@NodeContext.childrenNodes.add(node.node)
+    }
 }
 
 /**
@@ -47,19 +84,6 @@ open class NodeContext() : UniqueEntity() {
  * @param tag 节点标签
  */
 open class RealNodeContext(val tag: String) : NodeContext() {
-    val attributePool: MutableList<Pair<String, String?>> = mutableListOf()
-    
-    private fun get(tag: String): String? =
-        attributePool.firstOrNull { it.first == tag }?.second
-    
-    private fun set(tag: String, value: String?) =
-        if (!(attributePool.any { it.first == tag }))
-            attributePool.add(tag to value)
-        else
-            attributePool.forEachIndexed { index, (key, _) ->
-                if (key == tag) attributePool[index] = key to value
-            }
-    
-    fun attribute(tag: String): AttributeContext = AttributeContext(tag, attributePool)
-    fun attribute(): AttributeContext = AttributeContext(null, attributePool)
+    fun attribute(tag: String): AttributeContext = AttributeContext(tag, this::get, this::set)
+    fun attribute(): AttributeContext = AttributeContext(null, this::get, this::set)
 }

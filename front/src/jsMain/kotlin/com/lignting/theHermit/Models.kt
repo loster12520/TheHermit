@@ -19,8 +19,10 @@ abstract class UniqueEntity {
  */
 typealias UpdateDomain<Type, Context> = Context.() -> Type?
 
+typealias UpdateDomainContextless<Type> = () -> Type?
 
-operator fun <Type, Context> Context.invoke(tag: String, function: UpdateDomain<Type, Context>): Type? {
+
+operator fun <Type, Context> Context.invoke(function: UpdateDomain<Type, Context>): Type? {
     effectContextStack.addLast(mutableListOf())
     val result = function()
     val list = effectContextStack.removeLast()
@@ -36,12 +38,12 @@ abstract class Update<T>() : UniqueEntity() {
     abstract var value: T?
     
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T? {
-        effectContextStack.last().add(uuid)
+        effectContextStack.lastOrNull()?.add(uuid)
         return this.value
     }
     
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
         this.value = value
-        // TODO: 触发更新域的重新加载
+        effectPool[uuid]?.forEach { it() }
     }
 }
